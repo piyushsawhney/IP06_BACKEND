@@ -1,16 +1,25 @@
 package in.knaps;
 
-import com.google.inject.Inject;
-import in.knaps.domain.model.client.ClientDbFactory;
 import in.knaps.domain.model.client.details.ClientDetails;
 import in.knaps.domain.model.client.details.ClientId;
+import in.knaps.domain.model.mf.Return;
+import in.knaps.domain.model.mf.folio.FolioDetails;
+import in.knaps.domain.model.mf.folio.FolioNumber;
+import in.knaps.domain.model.mf.folio.SchemeCode;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
 public interface KnapsApplication {
     List<ClientDetails> getClientList();
 
-    ClientDetails getClientDetailedInfo(ClientId clientId);
+    ClientDetails getClientDetailedInfo(@Nonnull ClientId clientId);
 
-    List<ClientDetails> getFamilyMemberDetails(ClientId clientId);
+    List<ClientDetails> getFamilyMemberDetails(@Nonnull ClientId clientId);
+
+    List<FolioDetails> getClientFolios(@Nonnull ClientId clientId);
+
+    Return getClientSchemeReturn(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
+
+    List<FolioDetails> getClientFolioList(@Nonnull ClientId clientId);
 }

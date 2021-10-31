@@ -4,12 +4,28 @@ import com.google.inject.Inject;
 import in.knaps.domain.model.client.ClientDbFactory;
 import in.knaps.domain.model.client.details.ClientDetails;
 import in.knaps.domain.model.client.details.ClientId;
+import in.knaps.domain.model.mf.CurrencyValue;
+import in.knaps.domain.model.mf.MfDbFactory;
+import in.knaps.domain.model.mf.Return;
+import in.knaps.domain.model.mf.folio.FolioDetails;
+import in.knaps.domain.model.mf.folio.FolioNumber;
+import in.knaps.domain.model.mf.folio.SchemeCode;
+import in.knaps.domain.model.mf.processing.MfValueCalculator;
+import org.decampo.xirr.Transaction;
 
+import javax.annotation.Nonnull;
+import java.time.LocalDate;
 import java.util.List;
 
 public class KnapsApplicationImpl implements KnapsApplication {
     @Inject
     private ClientDbFactory clientDbFactory;
+
+    @Inject
+    private MfDbFactory mfDbFactory;
+
+    @Inject
+    private MfValueCalculator mfValueCalculator;
 
     @Override
     public List<ClientDetails> getClientList() {
@@ -17,12 +33,51 @@ public class KnapsApplicationImpl implements KnapsApplication {
     }
 
     @Override
-    public ClientDetails getClientDetailedInfo(ClientId clientId) {
+    public ClientDetails getClientDetailedInfo(@Nonnull ClientId clientId) {
         return clientDbFactory.getClientDetailedInfoFromDb(clientId);
     }
 
     @Override
-    public List<ClientDetails> getFamilyMemberDetails(ClientId clientId) {
+    public List<ClientDetails> getFamilyMemberDetails(@Nonnull ClientId clientId) {
         return clientDbFactory.getFamilyMemberDetailsFromDb(clientId);
+    }
+
+    @Override
+    public List<FolioDetails> getClientFolios(@Nonnull ClientId clientId) {
+//        clientDbFactory.validateClient(clientId);
+        List<FolioDetails> folioDetailList = mfDbFactory.getClientFolioListFromDb(clientId);
+
+        folioDetailList.forEach(folio -> {
+            folio.getSchemeInfoMap().forEach((schemeCode, schemeInfo) -> {
+                schemeInfo.setCurrentValue(mfValueCalculator.calculateCurrentValue(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits()));
+            });
+        });
+        return folioDetailList;
+    }
+
+    @Override
+    public Return getClientSchemeReturn(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+//        clientDbFactory.validateClient(clientId);
+        List<Transaction> transactionList = mfDbFactory.getSchemeTransactionList(folioNumber, schemeCode);
+        CurrencyValue currentValue = mfDbFactory.getSchemeCurrentValue(folioNumber, schemeCode);
+        if (currentValue.getValue() != 0.0) {
+            transactionList.add(new Transaction(-currentValue.getValue(), LocalDate.now()));
+        }
+        return mfValueCalculator.calculateSchemeReturn(transactionList);
+    }
+
+    @Override
+    public List<FolioDetails> getClientFolioList(@Nonnull ClientId clientId) {
+//        clientDbFactory.validateClient(clientId);
+        List<FolioDetails> folioDetailList = mfDbFactory.getClientFolioListFromDb(clientId);
+
+        folioDetailList.forEach(folio -> {
+            folio.getSchemeInfoMap().forEach((schemeCode, schemeInfo) -> {
+                schemeInfo.setSchemeTransactionTypeValueMap(mfDbFactory.getTransactionTypeDetails(folio.getFolioNumber(), schemeCode));
+                schemeInfo.setCurrentValue(mfValueCalculator.calculateCurrentValue(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits()));
+                schemeInfo.setSchemeReturns(mfValueCalculator.calculateReturn(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits(), schemeInfo.getCurrentValue()));
+            });
+        });
+        return folioDetailList;
     }
 }

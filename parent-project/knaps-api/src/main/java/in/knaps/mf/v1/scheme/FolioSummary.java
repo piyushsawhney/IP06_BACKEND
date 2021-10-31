@@ -1,15 +1,15 @@
-package in.knaps.mf.v1;
+package in.knaps.mf.v1.scheme;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Map;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FolioSchemeSummary {
+public class FolioSummary {
     private String folioNumber;
     private String rta;
     private String amcCode;
-    private Map<String, FolioSchemeInfo> schemeInfo;
+    private String amcName;
+    private Map<String,SchemeInfo> schemeInfo;
 
     public String getFolioNumber() {
         return folioNumber;
@@ -35,11 +35,19 @@ public class FolioSchemeSummary {
         this.amcCode = amcCode;
     }
 
-    public Map<String, FolioSchemeInfo> getSchemeInfo() {
+    public String getAmcName() {
+        return amcName;
+    }
+
+    public void setAmcName(String amcName) {
+        this.amcName = amcName;
+    }
+
+    public Map<String, SchemeInfo> getSchemeInfo() {
         return schemeInfo;
     }
 
-    public void setSchemeInfo(Map<String, FolioSchemeInfo> schemeInfo) {
+    public void setSchemeInfo(Map<String, SchemeInfo> schemeInfo) {
         this.schemeInfo = schemeInfo;
     }
 }

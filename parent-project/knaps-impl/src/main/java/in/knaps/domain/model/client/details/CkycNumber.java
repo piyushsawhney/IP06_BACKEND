@@ -1,20 +1,18 @@
 package in.knaps.domain.model.client.details;
 
-import in.knaps.domain.model.base.UuidValue;
+import in.knaps.domain.model.base.StringIdValue;
 
-import java.util.UUID;
+public class CkycNumber extends StringIdValue {
+    public CkycNumber() {
 
-public class ClientId extends UuidValue {
-    public ClientId() {
-        super();
     }
 
-    public ClientId(String value) {
+    public CkycNumber(String value) {
         super(value);
     }
 
     @Override
-    public UUID getValue() {
+    public String getValue() {
         return super.getValue();
     }
 

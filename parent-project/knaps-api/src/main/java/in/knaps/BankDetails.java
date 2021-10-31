@@ -1,7 +1,6 @@
-package in.knaps.mf.v1;
+package in.knaps;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import in.knaps.Address;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BankDetails {

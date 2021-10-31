@@ -3,7 +3,7 @@ package in.knaps.mf.v1;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ClientSystematicList {
+public class FolioSystematicDetails {
     String folioNumber;
     String schemeName;
     String schemeCode;

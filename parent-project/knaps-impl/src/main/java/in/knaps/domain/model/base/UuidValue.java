@@ -11,8 +11,9 @@ public class UuidValue {
 
     }
 
-    public UuidValue(UUID value) {
-        this.value = value;
+    public UuidValue(String value) {
+
+        setUuidValue(value);
     }
 
     public UUID getValue() {
@@ -20,19 +21,18 @@ public class UuidValue {
     }
 
     public void setValue(String value) {
-        if (StringUtils.isNotEmpty(value))
+        setUuidValue(value);
+
+    }
+
+    private void setUuidValue(String uuidString) {
+        if (StringUtils.isNotEmpty(uuidString))
             try {
-                this.value = UUID.fromString(value);
+                this.value = UUID.fromString(uuidString);
             } catch (IllegalArgumentException e) {
                 throw new ImproperDomainValueException("ERROR: Improper Value for entity class", e);
             }
         else
             throw new ImproperDomainValueException("ERROR: Improper Value for entity class");
-
-    }
-
-    public void setValue(UUID value) {
-        this.value = value;
-
     }
 }

@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import in.knaps.client.v1.ClientApiV1;
 import in.knaps.client.v1.ClientBasicInfo;
 import in.knaps.client.v1.ClientDetailedInfo;
+import in.knaps.domain.HoldingNature;
+import in.knaps.domain.model.base.Validator;
 import in.knaps.domain.model.client.details.ClientDetails;
 import in.knaps.domain.model.client.details.ClientId;
 
@@ -29,13 +31,14 @@ public class ClientApiV1Impl implements ClientApiV1 {
 
     @Override
     public ClientDetailedInfo getClientDetails(String clientId) {
-        return populateClientDetailedInfo(knapsApplication.getClientDetailedInfo(new ClientId(UUID.fromString(clientId))));
+        Validator.checkWebArgument(clientId);
+        return populateClientDetailedInfo(knapsApplication.getClientDetailedInfo(new ClientId(clientId)));
     }
 
     @Override
     public List<ClientDetailedInfo> getClientFamilyMemberDetails(String clientId) {
-
-        return knapsApplication.getFamilyMemberDetails(new ClientId(UUID.fromString(clientId))).stream()
+        Validator.checkWebArgument(clientId);
+        return knapsApplication.getFamilyMemberDetails(new ClientId(clientId)).stream()
                 .map(this::populateClientDetailedInfo).collect(Collectors.toList());
     }
 

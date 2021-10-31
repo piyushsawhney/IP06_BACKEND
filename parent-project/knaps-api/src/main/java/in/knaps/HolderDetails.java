@@ -1,4 +1,4 @@
-package in.knaps.mf.v1;
+package in.knaps;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -8,6 +8,7 @@ public class HolderDetails {
     String holderName;
     String holderPan;
     String holderCKycNumber;
+    String cif;
 
     public String getClientId() {
         return clientId;
@@ -39,5 +40,13 @@ public class HolderDetails {
 
     public void setHolderCKycNumber(String holderCKycNumber) {
         this.holderCKycNumber = holderCKycNumber;
+    }
+
+    public String getCif() {
+        return cif;
+    }
+
+    public void setCif(String cif) {
+        this.cif = cif;
     }
 }

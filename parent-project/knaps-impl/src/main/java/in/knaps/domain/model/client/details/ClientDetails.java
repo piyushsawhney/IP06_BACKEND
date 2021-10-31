@@ -1,5 +1,6 @@
 package in.knaps.domain.model.client.details;
 
+import in.knaps.domain.model.KnapsDate;
 import in.knaps.domain.model.client.address.Address;
 import in.knaps.domain.model.client.address.City;
 
@@ -10,7 +11,7 @@ public class ClientDetails {
     Address address;
     Gender gender;
     Address overseasAddress;
-    DateOfBirth dateOfBirth;
+    KnapsDate dateOfBirth;
     CountryCode countryCode1;
     Mobile mobile1;
     CountryCode countryCode2;
@@ -24,6 +25,7 @@ public class ClientDetails {
     City placeOfBirth;
     PhoneNumber residenceNumber;
     PhoneNumber officeNumber;
+
 
     public ClientId getClientId() {
         return clientId;
@@ -73,11 +75,11 @@ public class ClientDetails {
         this.overseasAddress = overseasAddress;
     }
 
-    public DateOfBirth getDateOfBirth() {
+    public KnapsDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(DateOfBirth dateOfBirth) {
+    public void setDateOfBirth(KnapsDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

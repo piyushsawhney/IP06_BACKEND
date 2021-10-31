@@ -1,15 +1,15 @@
-package in.knaps.domain.model.client.details;
+package in.knaps.domain.model;
 
 import in.knaps.domain.model.base.DateValue;
 import org.joda.time.LocalDate;
 
 
-public class DateOfBirth extends DateValue {
-    public DateOfBirth() {
+public class KnapsDate extends DateValue {
+    public KnapsDate() {
         super();
     }
 
-    public DateOfBirth(LocalDate date) {
+    public KnapsDate(LocalDate date) {
         super(date);
     }
 

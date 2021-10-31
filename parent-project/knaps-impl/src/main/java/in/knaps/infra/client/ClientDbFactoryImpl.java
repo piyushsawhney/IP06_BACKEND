@@ -1,17 +1,20 @@
 package in.knaps.infra.client;
 
 import com.google.inject.Inject;
+import in.knaps.domain.model.KnapsDate;
 import in.knaps.domain.model.base.Validator;
 import in.knaps.domain.model.client.ClientDbFactory;
 import in.knaps.domain.model.client.ClientSqlStatement;
 import in.knaps.domain.model.client.address.*;
 import in.knaps.domain.model.client.details.*;
 import in.knaps.domain.model.db.DatabaseException;
+import in.knaps.domain.model.db.EntityNotFoundException;
 import in.knaps.domain.model.db.PostgresConnection;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormat;
 
+import javax.annotation.Nonnull;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -35,7 +38,7 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
                     ClientDetails clientDetails = new ClientDetails();
                     clientDetails.setPan(new Pan(rs.getString("pan")));
                     clientDetails.setFullName(new Name(completeFullName(rs.getString("first_name"), rs.getString("middle_name"), rs.getString("surname"))));
-                    clientDetails.setClientId(new ClientId(UUID.fromString(rs.getString("client_id"))));
+                    clientDetails.setClientId(new ClientId(rs.getString("client_id")));
                     clientDetailsList.add(clientDetails);
                 }
                 return clientDetailsList;
@@ -46,7 +49,7 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
     }
 
     @Override
-    public ClientDetails getClientDetailedInfoFromDb(ClientId clientId) {
+    public ClientDetails getClientDetailedInfoFromDb(@Nonnull ClientId clientId) {
         Validator.isNotNull(clientId);
 
         ResultSet rs = executeSelectQuery(ClientSqlStatement.CLIENT_DETAILED_INFO.replace("{clientId}", clientId.getValue().toString()));
@@ -64,7 +67,7 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
     }
 
     @Override
-    public List<ClientDetails> getFamilyMemberDetailsFromDb(ClientId clientId) {
+    public List<ClientDetails> getFamilyMemberDetailsFromDb(@Nonnull ClientId clientId) {
         Validator.isNotNull(clientId);
         ResultSet rs = executeSelectQuery(ClientSqlStatement.CLIENT_FAMILY_INFO
                 .replace("{clientId}", clientId.getValue().toString())
@@ -84,6 +87,21 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
         }
     }
 
+    @Override
+    public void validateClient(@Nonnull ClientId clientId) {
+        Validator.isNotNull(clientId);
+        ResultSet rs = executeSelectQuery(ClientSqlStatement.CLIENT_VALIDATE
+                .replace("{clientId}", clientId.getValue().toString()));
+        try {
+            if (!rs.next()) {
+                throw new EntityNotFoundException("ERROR: Client Id is invalid");
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("ERROR: Query statement creation failed", e);
+        }
+
+    }
+
 
     private ResultSet executeSelectQuery(String sqlStatement) {
         try {
@@ -96,7 +114,7 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
     private ClientDetails populateClientDetails(ResultSet resultSet) throws SQLException {
         ClientDetails clientDetails = new ClientDetails();
         if (resultSet.getString("client_id") != null) {
-            clientDetails.setClientId(new ClientId(UUID.fromString(resultSet.getString("client_id"))));
+            clientDetails.setClientId(new ClientId(resultSet.getString("client_id")));
         }
         if (resultSet.getString("pan") != null) {
             clientDetails.setPan(new Pan(resultSet.getString("pan")));
@@ -108,7 +126,18 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
                     resultSet.getString("surname"))));
         }
         if (resultSet.getString("gender") != null) {
-//            TODO: Gender Class
+            String gender = resultSet.getString("gender");
+            switch (gender.toLowerCase()) {
+                case "male":
+                    clientDetails.setGender(Gender.MALE);
+                    break;
+                case "female":
+                    clientDetails.setGender(Gender.FEMALE);
+                    break;
+                case "others":
+                    clientDetails.setGender(Gender.OTHERS);
+                    break;
+            }
         }
         if (resultSet.getString("address1") != null) {
             clientDetails.setAddress(populateAddress(resultSet.getString("address1"),
@@ -130,7 +159,7 @@ public class ClientDbFactoryImpl implements ClientDbFactory {
         }
 
         if (resultSet.getString("date_of_birth") != null) {
-            DateOfBirth dateOfBirth = new DateOfBirth();
+            KnapsDate dateOfBirth = new KnapsDate();
             dateOfBirth.setDate(LocalDate.parse(resultSet.getString("date_of_birth"), DateTimeFormat.forPattern("yyyy-MM-dd")));
             clientDetails.setDateOfBirth(dateOfBirth);
         }

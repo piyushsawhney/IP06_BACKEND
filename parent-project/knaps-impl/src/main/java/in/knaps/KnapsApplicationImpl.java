@@ -8,10 +8,7 @@ import in.knaps.domain.model.mf.CurrencyValue;
 import in.knaps.domain.model.mf.MfDbFactory;
 import in.knaps.domain.model.mf.Return;
 import in.knaps.domain.model.mf.TransactionType;
-import in.knaps.domain.model.mf.folio.FolioDetails;
-import in.knaps.domain.model.mf.folio.FolioNumber;
-import in.knaps.domain.model.mf.folio.SchemeCode;
-import in.knaps.domain.model.mf.folio.SchemeTransactionTypeValue;
+import in.knaps.domain.model.mf.folio.*;
 import in.knaps.domain.model.mf.processing.MfValueCalculator;
 import org.decampo.xirr.Transaction;
 
@@ -75,4 +72,12 @@ public class KnapsApplicationImpl implements KnapsApplication {
 
         return mfDbFactory.getTransactionTypeDetails(folioNumber, schemeCode);
     }
+
+    @Override
+    public SchemeInformation getSchemeDetails(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+        //        clientDbFactory.validateClient(clientId);
+        return mfDbFactory.getSchemeInformation(folioNumber, schemeCode);
+    }
+
+
 }

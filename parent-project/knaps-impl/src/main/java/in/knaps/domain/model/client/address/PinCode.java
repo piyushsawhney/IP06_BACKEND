@@ -3,6 +3,13 @@ package in.knaps.domain.model.client.address;
 import in.knaps.domain.model.base.StringIdValue;
 
 public class PinCode extends StringIdValue {
+    public PinCode() {
+    }
+
+    public PinCode(String value) {
+        super(value);
+    }
+
     public void setForeignPinCode(String value) {
         super.setValue(value);
     }

@@ -1,16 +1,15 @@
 package in.knaps;
 
 import com.google.inject.Inject;
-import in.knaps.client.v1.ClientApiV1;
-import in.knaps.client.v1.ClientBasicInfo;
-import in.knaps.client.v1.ClientDetailedInfo;
-import in.knaps.domain.HoldingNature;
+import in.knaps.api.Address;
+import in.knaps.api.client.v1.ClientApiV1;
+import in.knaps.api.client.v1.ClientBasicInfo;
+import in.knaps.api.client.v1.ClientDetailedInfo;
 import in.knaps.domain.model.base.Validator;
 import in.knaps.domain.model.client.details.ClientDetails;
 import in.knaps.domain.model.client.details.ClientId;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ClientApiV1Impl implements ClientApiV1 {

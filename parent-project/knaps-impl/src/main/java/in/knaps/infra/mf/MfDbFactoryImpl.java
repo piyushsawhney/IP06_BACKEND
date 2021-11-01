@@ -1,12 +1,21 @@
 package in.knaps.infra.mf;
 
 import com.google.inject.Inject;
+import in.knaps.domain.HoldingNature;
+import in.knaps.domain.model.HolderDetails;
+import in.knaps.domain.model.bank.*;
 import in.knaps.domain.model.base.Validator;
-import in.knaps.domain.model.client.details.ClientId;
+import in.knaps.domain.model.client.address.*;
+import in.knaps.domain.model.client.details.*;
 import in.knaps.domain.model.db.DatabaseException;
+import in.knaps.domain.model.db.EntityNotFoundException;
 import in.knaps.domain.model.db.PostgresConnection;
 import in.knaps.domain.model.mf.*;
 import in.knaps.domain.model.mf.folio.*;
+import in.knaps.domain.model.nominee.NomineeDetails;
+import in.knaps.domain.model.nominee.Percentage;
+import in.knaps.domain.model.nominee.Relation;
+import org.apache.commons.lang3.StringUtils;
 import org.decampo.xirr.Transaction;
 
 import javax.annotation.Nonnull;
@@ -187,6 +196,28 @@ public class MfDbFactoryImpl implements MfDbFactory {
         }
     }
 
+    @Override
+    public SchemeInformation getSchemeInformation(@Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+        Validator.isNotNull(folioNumber);
+        Validator.isNotNull(schemeCode);
+        ResultSet rs = executeSelectQuery(MfSqlStatement.SCHEME_INFORMATION
+                .replace("{schemeCode}", schemeCode.getValue())
+                .replace("{folioNumber}", folioNumber.getValue()));
+
+        try {
+            if (rs.isBeforeFirst()) {
+                rs.next();
+                return populateSchemeInformation(rs);
+            } else {
+                throw new EntityNotFoundException(String.format("ERROR: Folio number %s and schemeCode %s does not exist", folioNumber, schemeCode));
+            }
+        } catch (
+                SQLException e) {
+            throw new DatabaseException("ERROR: Query statement creation failed", e);
+        }
+
+    }
+
     private ResultSet executeSelectQuery(String sqlStatement) {
         try {
             return postgresConnection.getConnection().createStatement().executeQuery(sqlStatement);
@@ -200,5 +231,125 @@ public class MfDbFactoryImpl implements MfDbFactory {
         map.put(transactionType, new SchemeTransactionTypeValue(
                 new Units(resultSet.getDouble("units")),
                 new CurrencyValue(resultSet.getDouble("value"))));
+    }
+
+    private SchemeInformation populateSchemeInformation(ResultSet resultSet) throws SQLException {
+        SchemeInformation schemeInformation = new SchemeInformation();
+        if (StringUtils.isNotEmpty(resultSet.getString("arn"))) {
+            schemeInformation.setArn(new Arn(resultSet.getString("arn")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("arn_desc"))) {
+            schemeInformation.setArnDescription(new ArnDescription(resultSet.getString("arn_desc")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("folio_number"))) {
+            schemeInformation.setFolioNumber(new FolioNumber(resultSet.getString("folio_number")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("scheme_code"))) {
+            schemeInformation.setSchemeCode(new SchemeCode(resultSet.getString("scheme_code")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("scheme_name"))) {
+            schemeInformation.setSchemeName(new SchemeName(resultSet.getString("scheme_name")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("investor_mobile"))) {
+            schemeInformation.setMobile(new Mobile(resultSet.getString("investor_mobile")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("investor_email"))) {
+            schemeInformation.setEmailAddress(new EmailAddress(resultSet.getString("investor_email")));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("holding_nature"))) {
+            String holdingNature = resultSet.getString("holding_nature");
+            if (holdingNature.toLowerCase().contains("si")) {
+                schemeInformation.setHoldingNature(HoldingNature.SI);
+            } else if (holdingNature.toLowerCase().contains("as")
+                    || holdingNature.toLowerCase().contains("es")
+                    || holdingNature.toLowerCase().contains("survivor")) {
+                schemeInformation.setHoldingNature(HoldingNature.AS);
+            } else if (holdingNature.toLowerCase().contains("joint")
+                    || holdingNature.toLowerCase().contains("jo")) {
+                schemeInformation.setHoldingNature(HoldingNature.JT);
+            }
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("investor_name"))) {
+            schemeInformation.setFirstHolder(populateHolder(
+                    resultSet, "investor_name", "pan", "investor_ckyc", "client_id"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("joint1_name"))) {
+            schemeInformation.setSecondHolder(populateHolder(
+                    resultSet, "joint1_name", "joint1_pan", "joint1_ckyc", "joint1_id"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("joint2_name"))) {
+            schemeInformation.setThirdHolder(populateHolder(
+                    resultSet, "joint2_name", "joint2_pan", "joint2_ckyc", "joint2_id"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("guardian_name"))) {
+            schemeInformation.setGuardian(populateHolder(
+                    resultSet, "guardian_name", "guardian_pan", "guardian_ckyc", "guardian_id"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("bank_name"))) {
+            BankDetails bankDetails = new BankDetails();
+            bankDetails.setBankName(new BankName(resultSet.getString("bank_name")));
+            if (StringUtils.isNotEmpty(resultSet.getString("bank_branch")))
+                bankDetails.setBankBranch(new BankBranch(resultSet.getString("bank_branch")));
+            if (StringUtils.isNotEmpty(resultSet.getString("bank_account_no")))
+                bankDetails.setBankAccountNo(new BankAccountNo(resultSet.getString("bank_account_no")));
+            if (StringUtils.isNotEmpty(resultSet.getString("bank_ifsc")))
+                bankDetails.setBankIfsc(new BankIfsc(resultSet.getString("bank_ifsc")));
+            if (StringUtils.isNotEmpty(resultSet.getString("bank_account_type")))
+                bankDetails.setBankAccountType(new BankAccountType(resultSet.getString("bank_account_type")));
+            schemeInformation.setBankDetails(bankDetails);
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("nominee1_name"))) {
+            schemeInformation.setFirstNominee(populateNomineeDetails(
+                    resultSet, "nominee1_name", "nominee1_percentage", "nominee1_relation"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("nominee2_name"))) {
+            schemeInformation.setSecondNominee(populateNomineeDetails(
+                    resultSet, "nominee2_name", "nominee2_percentage", "nominee2_relation"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("nominee3_name"))) {
+            schemeInformation.setSecondNominee(populateNomineeDetails(
+                    resultSet, "nominee3_name", "nominee3_percentage", "nominee3_relation"));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString("investor_address1"))) {
+            Address address = new Address();
+            address.setAddress1(new Address1(resultSet.getString("investor_address1")));
+            if (StringUtils.isNotEmpty(resultSet.getString("investor_address2"))) {
+                address.setAddress2(new Address2(resultSet.getString("investor_address2")));
+            }
+            if (StringUtils.isNotEmpty(resultSet.getString("investor_address3"))) {
+                address.setAddress3(new Address3(resultSet.getString("investor_address3")));
+            }
+            if (StringUtils.isNotEmpty(resultSet.getString("investor_city"))) {
+                address.setCity(new City(resultSet.getString("investor_city")));
+            }
+            if (StringUtils.isNotEmpty(resultSet.getString("investor_pincode"))) {
+                address.setPinCode(new PinCode(resultSet.getString("investor_pincode")));
+            }
+            schemeInformation.setClientAddress(address);
+        }
+        return schemeInformation;
+    }
+
+    private HolderDetails populateHolder(ResultSet resultSet, String nameLabel, String panLabel, String cKycLabel, String clientIdLabel) throws SQLException {
+        HolderDetails holderDetails = new HolderDetails();
+        holderDetails.setClientName(new Name(resultSet.getString(nameLabel)));
+        if (StringUtils.isNotEmpty(resultSet.getString(panLabel))) {
+            holderDetails.setClientPan(new Pan(resultSet.getString(panLabel)));
+        }
+        if (StringUtils.isNotEmpty(resultSet.getString(cKycLabel))) {
+            holderDetails.setCkycNumber(new CkycNumber(resultSet.getString(cKycLabel)));
+        }
+//            if (StringUtils.isNotEmpty(resultSet.getString(clientIdLabel))) {
+//                holderDetails.setClientId(new ClientId(resultSet.getString(clientIdLabel)));
+//            }
+        return holderDetails;
+    }
+
+    private NomineeDetails populateNomineeDetails(ResultSet resultSet, String nameLabel, String percentageLabel, String relationLabel) throws SQLException {
+        NomineeDetails nomineeDetails = new NomineeDetails();
+        nomineeDetails.setNomineeName(new Name(resultSet.getString(nameLabel)));
+        nomineeDetails.setNomineeRelation(new Relation(resultSet.getString(relationLabel)));
+        nomineeDetails.setNomineePercentage(new Percentage(resultSet.getFloat(percentageLabel)));
+        return nomineeDetails;
     }
 }

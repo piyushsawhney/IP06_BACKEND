@@ -28,10 +28,18 @@ public class Mobile extends StringIdValue {
     }
 
     private boolean validateMobileNumber(String value) {
-        String regex = "^\\d*$";
-        if (StringUtils.isNotEmpty(value) && value.matches(regex) && value.length() <= 10)
-            return true;
-        else
+        String number = "^\\d*$";
+        String internationRegex = "^\\+[1-9]{1}[0-9]{3,14}$";
+        if (StringUtils.isNotEmpty(value)) {
+            if (value.length() == 10 && value.matches(number)) {
+                return true;
+            } else if (value.matches(internationRegex)) {
+                return true;
+            } else {
+                throw new ImproperDomainValueException("Improper Value for entity class");
+            }
+        } else {
             throw new ImproperDomainValueException("Improper Value for entity class");
+        }
     }
 }

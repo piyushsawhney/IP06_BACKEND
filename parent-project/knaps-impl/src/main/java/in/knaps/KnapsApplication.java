@@ -3,12 +3,15 @@ package in.knaps;
 import in.knaps.domain.model.client.details.ClientDetails;
 import in.knaps.domain.model.client.details.ClientId;
 import in.knaps.domain.model.mf.Return;
+import in.knaps.domain.model.mf.TransactionType;
 import in.knaps.domain.model.mf.folio.FolioDetails;
 import in.knaps.domain.model.mf.folio.FolioNumber;
 import in.knaps.domain.model.mf.folio.SchemeCode;
+import in.knaps.domain.model.mf.folio.SchemeTransactionTypeValue;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Map;
 
 public interface KnapsApplication {
     List<ClientDetails> getClientList();
@@ -21,5 +24,6 @@ public interface KnapsApplication {
 
     Return getClientSchemeReturn(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
 
-    List<FolioDetails> getClientFolioList(@Nonnull ClientId clientId);
+    Map<TransactionType, SchemeTransactionTypeValue> getSchemeSummaryValue(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
+
 }

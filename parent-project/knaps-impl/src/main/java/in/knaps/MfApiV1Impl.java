@@ -8,10 +8,7 @@ import in.knaps.domain.model.mf.folio.FolioNumber;
 import in.knaps.domain.model.mf.folio.SchemeBasicInfo;
 import in.knaps.domain.model.mf.folio.SchemeCode;
 import in.knaps.mf.v1.*;
-import in.knaps.mf.v1.scheme.FolioSummary;
-import in.knaps.mf.v1.scheme.SchemeInfo;
-import in.knaps.mf.v1.scheme.SchemeReturn;
-import in.knaps.mf.v1.scheme.FolioSchemeRequest;
+import in.knaps.mf.v1.scheme.*;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -66,24 +63,24 @@ public class MfApiV1Impl implements MfApiV1 {
     }
 
     @Override
-    public List<FolioSchemeSummary> getClientFolioList(String clientId) {
+    public Map<String, SchemeSummary> getClientSchemeSummary(String clientId, FolioSchemeRequest schemeReturnRequest) {
         Validator.checkWebArgument(clientId);
-        try {
-            return knapsApplication.getClientFolioList(new ClientId(clientId)).stream()
-                    .map(p -> {
-                        FolioSchemeSummary folioSchemeSummary = new FolioSchemeSummary();
-                        folioSchemeSummary.setFolioNumber(p.getFolioNumber().getValue());
-                        folioSchemeSummary.setAmcCode(p.getAmcCode().getValue());
-                        folioSchemeSummary.setRta(p.getRta().getValue());
-                        folioSchemeSummary.setSchemeInfo(populateSchemeDetails(p.getSchemeInfoMap()));
-
-                        return folioSchemeSummary;
-                    }).collect(Collectors.toList());
-        } catch (ImproperDomainValueException e) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
-        }
-
+        Validator.checkWebArgument(schemeReturnRequest.getSchemeCode());
+        Validator.checkWebArgument(schemeReturnRequest.getFolioNumber());
+        return knapsApplication.getSchemeSummaryValue(
+                new ClientId(clientId),
+                new FolioNumber(schemeReturnRequest.getFolioNumber()),
+                new SchemeCode(schemeReturnRequest.getSchemeCode())).entrySet().stream().collect(Collectors.toMap(
+                schemeCode -> schemeCode.getKey().getValue(),
+                schemeTransactionTypeValue -> {
+                    SchemeSummary schemeSummary = new SchemeSummary();
+                    schemeSummary.setCurrentValue(schemeTransactionTypeValue.getValue().getMoneyValue().getValue());
+                    schemeSummary.setTotalUnits(schemeTransactionTypeValue.getValue().getUnits().getValue());
+                    return schemeSummary;
+                }
+        ));
     }
+
 
     private Map<String, FolioSchemeInfo> populateSchemeDetails(Map<SchemeCode, SchemeBasicInfo> map) {
         return map.entrySet().stream().collect(Collectors.toMap(

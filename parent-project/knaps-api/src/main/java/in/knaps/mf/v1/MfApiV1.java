@@ -3,10 +3,12 @@ package in.knaps.mf.v1;
 import in.knaps.mf.v1.scheme.FolioSummary;
 import in.knaps.mf.v1.scheme.SchemeReturn;
 import in.knaps.mf.v1.scheme.FolioSchemeRequest;
+import in.knaps.mf.v1.scheme.SchemeSummary;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
+import java.util.Map;
 
 @Path("/mf/api/v1/client/{clientId}/")
 public interface MfApiV1 {
@@ -22,11 +24,12 @@ public interface MfApiV1 {
     @Consumes(MediaType.APPLICATION_JSON)
     SchemeReturn getClientSchemeReturn(@PathParam("clientId") String clientId, FolioSchemeRequest schemeReturnRequest);
 
-
-    @Path("foliolist")
-    @GET
+    @Path("folio/scheme/summary")
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    List<FolioSchemeSummary> getClientFolioList(@PathParam("clientId") String clientId);
+    @Consumes(MediaType.APPLICATION_JSON)
+    Map<String,SchemeSummary> getClientSchemeSummary(@PathParam("clientId") String clientId, FolioSchemeRequest schemeReturnRequest);
+
 
     @Path("folio/{folioNumber}/details")
     @GET

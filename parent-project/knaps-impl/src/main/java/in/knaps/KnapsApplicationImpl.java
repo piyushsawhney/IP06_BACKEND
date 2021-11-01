@@ -7,15 +7,18 @@ import in.knaps.domain.model.client.details.ClientId;
 import in.knaps.domain.model.mf.CurrencyValue;
 import in.knaps.domain.model.mf.MfDbFactory;
 import in.knaps.domain.model.mf.Return;
+import in.knaps.domain.model.mf.TransactionType;
 import in.knaps.domain.model.mf.folio.FolioDetails;
 import in.knaps.domain.model.mf.folio.FolioNumber;
 import in.knaps.domain.model.mf.folio.SchemeCode;
+import in.knaps.domain.model.mf.folio.SchemeTransactionTypeValue;
 import in.knaps.domain.model.mf.processing.MfValueCalculator;
 import org.decampo.xirr.Transaction;
 
 import javax.annotation.Nonnull;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public class KnapsApplicationImpl implements KnapsApplication {
     @Inject
@@ -47,11 +50,11 @@ public class KnapsApplicationImpl implements KnapsApplication {
 //        clientDbFactory.validateClient(clientId);
         List<FolioDetails> folioDetailList = mfDbFactory.getClientFolioListFromDb(clientId);
 
-        folioDetailList.forEach(folio -> {
-            folio.getSchemeInfoMap().forEach((schemeCode, schemeInfo) -> {
-                schemeInfo.setCurrentValue(mfValueCalculator.calculateCurrentValue(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits()));
-            });
-        });
+        folioDetailList.forEach(folio -> folio.getSchemeInfoMap()
+                .forEach((schemeCode, schemeInfo) ->
+                        schemeInfo.setCurrentValue(
+                                mfValueCalculator.calculateCurrentValue
+                                        (folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits()))));
         return folioDetailList;
     }
 
@@ -67,17 +70,9 @@ public class KnapsApplicationImpl implements KnapsApplication {
     }
 
     @Override
-    public List<FolioDetails> getClientFolioList(@Nonnull ClientId clientId) {
-//        clientDbFactory.validateClient(clientId);
-        List<FolioDetails> folioDetailList = mfDbFactory.getClientFolioListFromDb(clientId);
+    public Map<TransactionType, SchemeTransactionTypeValue> getSchemeSummaryValue(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+        //        clientDbFactory.validateClient(clientId);
 
-        folioDetailList.forEach(folio -> {
-            folio.getSchemeInfoMap().forEach((schemeCode, schemeInfo) -> {
-                schemeInfo.setSchemeTransactionTypeValueMap(mfDbFactory.getTransactionTypeDetails(folio.getFolioNumber(), schemeCode));
-                schemeInfo.setCurrentValue(mfValueCalculator.calculateCurrentValue(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits()));
-                schemeInfo.setSchemeReturns(mfValueCalculator.calculateReturn(folio.getFolioNumber(), schemeCode, schemeInfo.getTotalUnits(), schemeInfo.getCurrentValue()));
-            });
-        });
-        return folioDetailList;
+        return mfDbFactory.getTransactionTypeDetails(folioNumber, schemeCode);
     }
 }

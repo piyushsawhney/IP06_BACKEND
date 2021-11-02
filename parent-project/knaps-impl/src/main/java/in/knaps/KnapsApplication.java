@@ -25,4 +25,7 @@ public interface KnapsApplication {
 
     SchemeInformation getSchemeDetails(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
 
+    List<FolioSchemeTransaction> getSchemeTransactions(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
+
+
 }

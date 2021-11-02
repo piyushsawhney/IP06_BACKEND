@@ -3,6 +3,7 @@ package in.knaps.infra.mf;
 import com.google.inject.Inject;
 import in.knaps.domain.HoldingNature;
 import in.knaps.domain.model.HolderDetails;
+import in.knaps.domain.model.KnapsDate;
 import in.knaps.domain.model.bank.*;
 import in.knaps.domain.model.base.Validator;
 import in.knaps.domain.model.client.address.*;
@@ -17,6 +18,8 @@ import in.knaps.domain.model.nominee.Percentage;
 import in.knaps.domain.model.nominee.Relation;
 import org.apache.commons.lang3.StringUtils;
 import org.decampo.xirr.Transaction;
+import org.joda.time.LocalDate;
+import org.joda.time.format.DateTimeFormat;
 
 import javax.annotation.Nonnull;
 import java.sql.ResultSet;
@@ -218,6 +221,49 @@ public class MfDbFactoryImpl implements MfDbFactory {
 
     }
 
+    @Override
+    public List<FolioSchemeTransaction> getSchemeTransactions(@Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+        Validator.isNotNull(folioNumber);
+        Validator.isNotNull(schemeCode);
+        ResultSet rs = executeSelectQuery(MfSqlStatement.SCHEME_TRANSACTION
+                .replace("{schemeCode}", schemeCode.getValue())
+                .replace("{folioNumber}", folioNumber.getValue()));
+        List<FolioSchemeTransaction> list = new ArrayList<>();
+
+        try {
+            if (rs.isBeforeFirst()) {
+                while (rs.next()) {
+                    FolioSchemeTransaction folioSchemeTransaction = new FolioSchemeTransaction();
+                    folioSchemeTransaction.setNavDate(
+                            new KnapsDate(LocalDate.parse(rs.getString("nav_date"),
+                                    DateTimeFormat.forPattern("yyyy-MM-dd"))));
+                    folioSchemeTransaction.setTransactionDescription(
+                            new TransactionDescription(String.format("%s %s",
+                                    rs.getString("transaction_type"),
+                                    rs.getString("transaction_suffix"))));
+                    folioSchemeTransaction.setUnits(new Units(rs.getDouble("units")));
+                    folioSchemeTransaction.setNav(new Nav(rs.getDouble("nav")));
+                    folioSchemeTransaction.setNav(new Nav(rs.getDouble("nav")));
+                    folioSchemeTransaction.setGrossAmount(new CurrencyValue(rs.getDouble("gross_amount")));
+                    folioSchemeTransaction.setCumulativeUnits(new Units(rs.getDouble("cumulative_units")));
+                    folioSchemeTransaction.setStampDuty(new CurrencyValue(rs.getDouble("stamp_duty")));
+                    folioSchemeTransaction.setExitLoad(new CurrencyValue(rs.getDouble("exit_load")));
+                    folioSchemeTransaction.setStt(new CurrencyValue(rs.getDouble("stt")));
+                    folioSchemeTransaction.setTax(new CurrencyValue(rs.getDouble("tax")));
+                    folioSchemeTransaction.setNetAmount(new CurrencyValue(rs.getDouble("net_amount")));
+                    list.add(folioSchemeTransaction);
+                }
+            } else {
+                throw new EntityNotFoundException(String.format("ERROR: Folio number %s and schemeCode %s does not exist", folioNumber, schemeCode));
+            }
+        } catch (
+                SQLException e) {
+            throw new DatabaseException("ERROR: Query statement creation failed", e);
+        }
+        return list;
+
+    }
+
     private ResultSet executeSelectQuery(String sqlStatement) {
         try {
             return postgresConnection.getConnection().createStatement().executeQuery(sqlStatement);
@@ -329,6 +375,7 @@ public class MfDbFactoryImpl implements MfDbFactory {
         }
         return schemeInformation;
     }
+
 
     private HolderDetails populateHolder(ResultSet resultSet, String nameLabel, String panLabel, String cKycLabel, String clientIdLabel) throws SQLException {
         HolderDetails holderDetails = new HolderDetails();

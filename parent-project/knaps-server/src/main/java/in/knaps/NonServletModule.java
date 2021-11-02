@@ -22,10 +22,9 @@ public class NonServletModule extends AbstractModule {
 
     @Provides
     public PostgresConnection providePostgresConnection() {
-        String url = "";
-        String user = "";
-        String password = "";
-
-        return new PostgresConnection(url, user, password);
+        String urlEnv = System.getenv("DB_URL");
+        String userEnv = System.getenv("DB_USER");
+        String passwordEnv = System.getenv("DB_PASSWORD");
+        return new PostgresConnection(urlEnv, userEnv, passwordEnv);
     }
 }

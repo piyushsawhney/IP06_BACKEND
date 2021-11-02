@@ -1,29 +1,20 @@
-package in.knaps.api.mf.v1;
+package in.knaps.api.mf.v1.scheme;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class FolioTransactionDetails {
-    String transactionId;
-    String navDate;
-    String processingDate;
-    Double units;
-    Double nav;
-    Double grossAmount;
-    Double netAmount;
-    Double stampDuty;
-    Double exitLoad;
-    Double stt;
-    Double tax;
-    String transactionDescription;
-
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
-    }
+public class SchemeTransaction {
+    private String navDate;
+    private String transactionDescription;
+    private Double units;
+    private Double nav;
+    private Double grossAmount;
+    private Double cumulativeUnits;
+    private Double stampDuty;
+    private Double exitLoad;
+    private Double stt;
+    private Double tax;
+    private Double netAmount;
 
     public String getNavDate() {
         return navDate;
@@ -33,12 +24,12 @@ public class FolioTransactionDetails {
         this.navDate = navDate;
     }
 
-    public String getProcessingDate() {
-        return processingDate;
+    public String getTransactionDescription() {
+        return transactionDescription;
     }
 
-    public void setProcessingDate(String processingDate) {
-        this.processingDate = processingDate;
+    public void setTransactionDescription(String transactionDescription) {
+        this.transactionDescription = transactionDescription;
     }
 
     public Double getUnits() {
@@ -65,12 +56,12 @@ public class FolioTransactionDetails {
         this.grossAmount = grossAmount;
     }
 
-    public Double getNetAmount() {
-        return netAmount;
+    public Double getCumulativeUnits() {
+        return cumulativeUnits;
     }
 
-    public void setNetAmount(Double netAmount) {
-        this.netAmount = netAmount;
+    public void setCumulativeUnits(Double cumulativeUnits) {
+        this.cumulativeUnits = cumulativeUnits;
     }
 
     public Double getStampDuty() {
@@ -105,11 +96,11 @@ public class FolioTransactionDetails {
         this.tax = tax;
     }
 
-    public String getTransactionDescription() {
-        return transactionDescription;
+    public Double getNetAmount() {
+        return netAmount;
     }
 
-    public void setTransactionDescription(String transactionDescription) {
-        this.transactionDescription = transactionDescription;
+    public void setNetAmount(Double netAmount) {
+        this.netAmount = netAmount;
     }
 }

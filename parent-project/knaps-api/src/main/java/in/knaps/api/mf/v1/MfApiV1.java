@@ -25,22 +25,23 @@ public interface MfApiV1 {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    Map<String,SchemeSummary> getClientSchemeSummary(@PathParam("clientId") String clientId, FolioSchemeRequest schemeReturnRequest);
+    Map<String,SchemeSummary> getClientSchemeSummary(@PathParam("clientId") String clientId, FolioSchemeRequest folioSchemeRequest);
 
 
     @Path("folio/scheme/details")
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    SchemeDetails getSchemeDetails(@PathParam("clientId") String clientId, FolioSchemeRequest schemeReturnRequest);
+    SchemeDetails getSchemeDetails(@PathParam("clientId") String clientId, FolioSchemeRequest folioSchemeRequest);
 
     @Path("systematiclist")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     List<FolioSystematicDetails> getClientSystematicList(@PathParam("clientId") String clientId);
 
-    @Path("folio/{folioNumber}/scheme/{schemeCode}/transactions")
-    @GET
+    @Path("folio/scheme/transactions")
+    @POST
     @Produces(MediaType.APPLICATION_JSON)
-    FolioTransactionDetails getFolioTransactionDetails(@PathParam("clientId") String clientId, @PathParam("folioNumber") String folioNumber, @PathParam("schemeCode") String schemeCode);
+    @Consumes(MediaType.APPLICATION_JSON)
+    List<SchemeTransaction> getFolioTransactionDetails(@PathParam("clientId") String clientId, FolioSchemeRequest folioSchemeRequest);
 }

@@ -79,5 +79,9 @@ public class KnapsApplicationImpl implements KnapsApplication {
         return mfDbFactory.getSchemeInformation(folioNumber, schemeCode);
     }
 
-
+    @Override
+    public List<FolioSchemeTransaction>  getSchemeTransactions(@Nonnull ClientId clientId, @Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode) {
+//        clientDbFactory.validateClient(clientId);
+        return mfDbFactory.getSchemeTransactions(folioNumber, schemeCode);
+    }
 }

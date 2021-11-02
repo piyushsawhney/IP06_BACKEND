@@ -21,5 +21,7 @@ public interface MfDbFactory {
 
     SchemeInformation getSchemeInformation(@Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
 
+    List<FolioSchemeTransaction> getSchemeTransactions(@Nonnull FolioNumber folioNumber, @Nonnull SchemeCode schemeCode);
+
 
 }

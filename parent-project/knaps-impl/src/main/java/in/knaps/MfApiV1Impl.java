@@ -6,7 +6,6 @@ import in.knaps.api.BankDetails;
 import in.knaps.api.HolderDetails;
 import in.knaps.api.NomineeDetails;
 import in.knaps.api.mf.v1.FolioSystematicDetails;
-import in.knaps.api.mf.v1.FolioTransactionDetails;
 import in.knaps.api.mf.v1.MfApiV1;
 import in.knaps.api.mf.v1.scheme.*;
 import in.knaps.domain.model.base.ImproperDomainValueException;
@@ -69,14 +68,14 @@ public class MfApiV1Impl implements MfApiV1 {
     }
 
     @Override
-    public Map<String, SchemeSummary> getClientSchemeSummary(String clientId, FolioSchemeRequest schemeReturnRequest) {
+    public Map<String, SchemeSummary> getClientSchemeSummary(String clientId, FolioSchemeRequest schemeSummaryRequest) {
         Validator.checkWebArgument(clientId);
-        Validator.checkWebArgument(schemeReturnRequest.getSchemeCode());
-        Validator.checkWebArgument(schemeReturnRequest.getFolioNumber());
+        Validator.checkWebArgument(schemeSummaryRequest.getSchemeCode());
+        Validator.checkWebArgument(schemeSummaryRequest.getFolioNumber());
         return knapsApplication.getSchemeSummaryValue(
                 new ClientId(clientId),
-                new FolioNumber(schemeReturnRequest.getFolioNumber()),
-                new SchemeCode(schemeReturnRequest.getSchemeCode())).entrySet().stream().collect(Collectors.toMap(
+                new FolioNumber(schemeSummaryRequest.getFolioNumber()),
+                new SchemeCode(schemeSummaryRequest.getSchemeCode())).entrySet().stream().collect(Collectors.toMap(
                 schemeCode -> schemeCode.getKey().getValue(),
                 schemeTransactionTypeValue -> {
                     SchemeSummary schemeSummary = new SchemeSummary();
@@ -88,15 +87,15 @@ public class MfApiV1Impl implements MfApiV1 {
     }
 
     @Override
-    public SchemeDetails getSchemeDetails(String clientId, FolioSchemeRequest schemeReturnRequest) {
+    public SchemeDetails getSchemeDetails(String clientId, FolioSchemeRequest folioSchemeRequest) {
         Validator.checkWebArgument(clientId);
-        Validator.checkWebArgument(schemeReturnRequest.getSchemeCode());
-        Validator.checkWebArgument(schemeReturnRequest.getFolioNumber());
+        Validator.checkWebArgument(folioSchemeRequest.getSchemeCode());
+        Validator.checkWebArgument(folioSchemeRequest.getFolioNumber());
 
         return populateSchemeDetails(knapsApplication.getSchemeDetails(
                 new ClientId(clientId),
-                new FolioNumber(schemeReturnRequest.getFolioNumber()),
-                new SchemeCode(schemeReturnRequest.getSchemeCode())));
+                new FolioNumber(folioSchemeRequest.getFolioNumber()),
+                new SchemeCode(folioSchemeRequest.getSchemeCode())));
     }
 
     @Override
@@ -105,9 +104,30 @@ public class MfApiV1Impl implements MfApiV1 {
     }
 
     @Override
-    public FolioTransactionDetails getFolioTransactionDetails(String clientId, String folioNumber, String schemeCode) {
-        return null;
+    public List<SchemeTransaction> getFolioTransactionDetails(String clientId, FolioSchemeRequest folioSchemeRequest) {
+        Validator.checkWebArgument(clientId);
+        Validator.checkWebArgument(folioSchemeRequest.getSchemeCode());
+        Validator.checkWebArgument(folioSchemeRequest.getFolioNumber());
+
+        return knapsApplication.getSchemeTransactions(
+                new ClientId(clientId),
+                new FolioNumber(folioSchemeRequest.getFolioNumber()),
+                new SchemeCode(folioSchemeRequest.getSchemeCode())).stream().map(transaction -> {
+            SchemeTransaction schemeTransaction = new SchemeTransaction();
+            schemeTransaction.setNavDate(transaction.getNavDate().getDate().toString());
+            schemeTransaction.setTransactionDescription(transaction.getTransactionDescription().getValue());
+            schemeTransaction.setUnits(transaction.getUnits().getValue());
+            schemeTransaction.setNav(transaction.getNav().getValue());
+            schemeTransaction.setNetAmount(transaction.getNetAmount().getValue());
+            schemeTransaction.setStampDuty(transaction.getStampDuty().getValue());
+            schemeTransaction.setTax(transaction.getTax().getValue());
+            schemeTransaction.setStt(transaction.getStt().getValue());
+            schemeTransaction.setGrossAmount(transaction.getGrossAmount().getValue());
+            schemeTransaction.setCumulativeUnits(transaction.getCumulativeUnits().getValue());
+            return schemeTransaction;
+        }).collect(Collectors.toList());
     }
+
 
     private SchemeDetails populateSchemeDetails(SchemeInformation schemeInformation) {
         SchemeDetails schemeDetails = new SchemeDetails();

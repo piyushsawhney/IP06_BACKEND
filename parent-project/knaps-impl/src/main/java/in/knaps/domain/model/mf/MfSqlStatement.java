@@ -22,6 +22,12 @@ public interface MfSqlStatement {
             "FROM mf_client_data.mf_client_transactions " +
             "WHERE folio_number = '{folioNumber}' and scheme_code = '{schemeCode}' and units != 0;";
 
+    String SCHEME_TRANSACTION = "select nav_date,units,nav,gross_amount,stamp_duty,net_amount,exit_load,stt,tax," +
+            "transaction_type,transaction_suffix,sum(units) over (PARTITION BY scheme_code ORDER BY nav_date,transaction_id) " +
+            "as cumulative_units " +
+            "FROM mf_client_data.mf_client_transactions " +
+            "WHERE folio_number = '{folioNumber}' and scheme_code = '{schemeCode}' and units != 0;";
+
 
     String SCHEME_INFORMATION = "select arn,arn_desc,folio_number,scheme_code,scheme_name," +
             "investor_mobile,investor_email,holding_nature," +
